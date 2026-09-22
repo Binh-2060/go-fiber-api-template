@@ -1,8 +1,6 @@
 package responsebody
 
 import (
-	"time"
-
 	"github.com/Binh-2060/go-application-template/examples/crud/models"
 )
 
@@ -15,10 +13,8 @@ expose rather than an accidental leak, and a column rename does not silently
 break every client.
 */
 type User struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Surename  string    `json:"surename"`
-	CreatedAt time.Time `json:"created_at"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 /*
@@ -26,10 +22,8 @@ Map a model to its response shape.
 */
 func NewUser(m models.User) User {
 	return User{
-		ID:        m.ID,
-		Name:      m.Name,
-		Surename:  m.Surename,
-		CreatedAt: m.CreatedAt,
+		ID:   m.ID,
+		Name: m.Name,
 	}
 }
 

@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/Binh-2060/go-application-template/examples/api/presenters"
+	"github.com/Binh-2060/go-application-template/internal/api/presenters"
 	"github.com/gofiber/fiber/v3"
 )
 

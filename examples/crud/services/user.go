@@ -10,19 +10,8 @@ import (
 	"github.com/Binh-2060/go-application-template/pkg/db"
 )
 
-/*
-ErrUserNotFound is re-exported so controllers can map it to a 404 without
-importing the repository layer. errors.Is against it still matches the error the
-repository actually returns — it is the same value, not a copy.
-*/
-var ErrUserNotFound = repositories.ErrUserNotFound
-
-/*
-ErrNoUpdateFields is re-exported for the same reason: an update that would
-change nothing is the client's mistake, not a server failure, so the controller
-needs to recognise it as a 400.
-*/
-var ErrNoUpdateFields = repositories.ErrNoUpdateFields
+// Errors from examples/crud/exceptions pass through unchanged, so the
+// controller can match them with errors.Is.
 
 const (
 	defaultPage    = 1
@@ -47,7 +36,7 @@ func CreateUser(ctx context.Context, in requestbody.CreateUser) (responsebody.Us
 	var err error
 	var user models.User
 	err = db.ExecTx(ctx, func(ctx context.Context, _ db.Querier) error {
-		userTx, err := repositories.CreateUser(ctx, in.Name, in.Surename)
+		userTx, err := repositories.CreateUser(ctx, in.Name)
 		if err != nil {
 			return err
 		}
@@ -60,35 +49,7 @@ func CreateUser(ctx context.Context, in requestbody.CreateUser) (responsebody.Us
 }
 
 /*
-Create several users atomically.
-
-db.ExecTx commits when fn returns nil and rolls back on any error, so a failure
-on the last user leaves none of them behind. The repository calls inside fn need
-no change: they resolve their Querier with db.Q(ctx), which returns this
-transaction because ExecTx put it on the context it passes to fn.
-*/
-func CreateUsers(ctx context.Context, in requestbody.CreateUsers) ([]responsebody.User, error) {
-	created := make([]responsebody.User, 0, len(in.Users))
-
-	err := db.ExecTx(ctx, func(ctx context.Context, _ db.Querier) error {
-		for _, u := range in.Users {
-			user, err := repositories.CreateUser(ctx, u.Name, u.Surename)
-			if err != nil {
-				return err
-			}
-			created = append(created, responsebody.NewUser(user))
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return created, nil
-}
-
-/*
-Fetch one user, or ErrUserNotFound.
+Fetch one user, or exceptions.ErrUserNotFound.
 */
 func GetUser(ctx context.Context, id string) (responsebody.User, error) {
 	user, err := repositories.GetUserByID(ctx, id)
@@ -155,19 +116,15 @@ func UpdateUser(ctx context.Context, id string, in requestbody.UpdateUser) error
 	}
 
 	err = db.ExecTx(ctx, func(ctx context.Context, _ db.Querier) error {
-		_, err := repositories.UpdateUser(ctx, userInfo.ID, &in.Name, &in.Surename)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		_, err := repositories.UpdateUser(ctx, userInfo.ID, &in.Name)
+		return err
 	})
 
-	return nil
+	return err
 }
 
 /*
-Delete a user, or ErrUserNotFound.
+Delete a user, or exceptions.ErrUserNotFound.
 */
 func DeleteUser(ctx context.Context, id string) error {
 	err := db.ExecTx(ctx, func(ctx context.Context, _ db.Querier) error {

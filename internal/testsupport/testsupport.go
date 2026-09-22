@@ -1,9 +1,8 @@
 /*
-Package testsupport holds the setup the integration tests share.
-
-The tests live in three packages (repositories, services, routes) and each needs
-the same TestMain and the same row isolation, so it lives here once rather than
-three times.
+Package testsupport holds the setup integration tests share: a TestMain body
+that opens the database, and Marker for row isolation. It knows nothing about
+any one feature, so every feature's route tests (internal/api/tests, and the
+examples' tests/ packages) reuse it as is.
 */
 package testsupport
 
@@ -16,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/Binh-2060/go-application-template/pkg/db"
+	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -79,16 +79,21 @@ func loadEnv() {
 }
 
 /*
-Marker returns a unique name prefix for one test and registers the cleanup that
-removes every row carrying it.
+Marker returns a unique prefix for one test and registers the cleanup that
+deletes every row of table whose column starts with it. The test puts the
+prefix at the start of that column in every row it creates:
 
-Isolation is by marker rather than by truncating the table, so the tests never
-touch rows they did not create and can run against a shared database.
+	m := testsupport.Marker(t, "users", "name")    // name = m + "Ada"
+	m := testsupport.Marker(t, "products", "sku")  // sku  = m + "A-1"
+
+Pick a text column the test always fills. Isolation is by marker rather than by
+truncating the table, so the tests never touch rows they did not create and can
+run against a shared database.
 
 The prefix contains no '_' or '%': both are wildcards in LIKE, and a marker that
 matched other rows would delete data the test did not create.
 */
-func Marker(t *testing.T) string {
+func Marker(t *testing.T, table, column string) string {
 	t.Helper()
 
 	buf := make([]byte, 6)
@@ -101,7 +106,11 @@ func Marker(t *testing.T) string {
 		// Background context: the test's own context may already be done, and
 		// cleanup still has to run.
 		ctx := context.Background()
-		if _, err := db.Q(ctx).Exec(ctx, `DELETE FROM users WHERE name LIKE $1`, marker+"%"); err != nil {
+		// table and column are identifiers, which cannot be bound like values;
+		// Sanitize quotes them so they can only ever name a table and a column.
+		q := `DELETE FROM ` + pgx.Identifier{table}.Sanitize() +
+			` WHERE ` + pgx.Identifier{column}.Sanitize() + ` LIKE $1`
+		if _, err := db.Q(ctx).Exec(ctx, q, marker+"%"); err != nil {
 			t.Errorf("cleanup %s: %v", marker, err)
 		}
 	})

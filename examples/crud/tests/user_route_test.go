@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Binh-2060/go-application-template/examples/crud/exceptions"
 	"github.com/Binh-2060/go-application-template/examples/crud/routes"
 	"github.com/Binh-2060/go-application-template/examples/crud/schemas/responsebody"
 	"github.com/Binh-2060/go-application-template/internal/api/validators"
@@ -138,18 +139,16 @@ func decodeUser(t *testing.T, items json.RawMessage) responsebody.User {
 }
 
 /*
-A created resource answers 201 and is immediately readable at its own id — the
+A created resource answers 200 and is immediately readable at its own id — the
 one path every other test depends on.
 */
 func TestHTTP_CreateThenGet(t *testing.T) {
 	app := newTestApp()
 	m := marker(t)
 
-	status, env := do(t, app, http.MethodPost, "/users", map[string]string{
-		"name": m + "Ada", "surename": "Lovelace",
-	})
-	if status != http.StatusCreated {
-		t.Fatalf("POST /users = %d, want 201 (%v)", status, env.Error)
+	status, env := do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + "Ada"})
+	if status != http.StatusOK {
+		t.Fatalf("POST /users/newData = %d, want 200 (%v)", status, env.Error)
 	}
 	if env.Status != 1 {
 		t.Errorf("envelope status = %d, want 1", env.Status)
@@ -163,13 +162,13 @@ func TestHTTP_CreateThenGet(t *testing.T) {
 		t.Fatal("created user has no id")
 	}
 
-	status, env = do(t, app, http.MethodGet, "/users/"+created.ID, nil)
+	status, env = do(t, app, http.MethodGet, "/users/info/"+created.ID, nil)
 	if status != http.StatusOK {
-		t.Fatalf("GET /users/:id = %d, want 200", status)
+		t.Fatalf("GET /users/info/:id = %d, want 200", status)
 	}
 
 	got := decodeUser(t, env.Items)
-	if got.ID != created.ID || got.Name != m+"Ada" || got.Surename != "Lovelace" {
+	if got.ID != created.ID || got.Name != m+"Ada" {
 		t.Errorf("fetched %+v, want the row just created", got)
 	}
 }
@@ -177,16 +176,16 @@ func TestHTTP_CreateThenGet(t *testing.T) {
 /*
 A malformed id is bad input, not a missing resource: 400, and no query is sent.
 
-The distinction matters — answering 404 here tells a client the id might exist
-somewhere, when it could never be valid.
+The distinction matters — a malformed id could never be valid, so it is the
+client's mistake, not a missing row.
 */
 func TestHTTP_MalformedIDIs400(t *testing.T) {
 	app := newTestApp()
 
-	status, env := do(t, app, http.MethodGet, "/users/not-a-uuid", nil)
+	status, env := do(t, app, http.MethodGet, "/users/info/not-a-uuid", nil)
 
 	if status != http.StatusBadRequest {
-		t.Fatalf("GET /users/not-a-uuid = %d, want 400", status)
+		t.Fatalf("GET /users/info/not-a-uuid = %d, want 400", status)
 	}
 	if env.Status != 0 {
 		t.Errorf("envelope status = %d, want 0", env.Status)
@@ -197,21 +196,34 @@ func TestHTTP_MalformedIDIs400(t *testing.T) {
 }
 
 /*
-A well-formed id with no row behind it is the 404 case, which is only reachable
-if the repository sentinel survives all the way up to toHTTPError.
-*/
-/*
-controllers/user.go has no sentinel-to-status mapping: every service error,
-ErrUserNotFound included, becomes a 500. A true 404 here would need a
-toHTTPError switch translating the sentinel before it reaches fiber.NewError.
+A well-formed id with no row behind it. The controller returns every service
+error as a 500 with err.Error() as the message, so the client sees
+"user not found".
 */
 func TestHTTP_MissingUserIs500(t *testing.T) {
 	app := newTestApp()
 
-	status, _ := do(t, app, http.MethodGet, "/users/00000000-0000-0000-0000-000000000000", nil)
+	status, env := do(t, app, http.MethodGet, "/users/info/00000000-0000-0000-0000-000000000000", nil)
 
 	if status != http.StatusInternalServerError {
 		t.Fatalf("GET missing user = %d, want 500", status)
+	}
+	if env.Error == nil || *env.Error != exceptions.ErrUserNotFound.Error() {
+		t.Errorf("envelope error = %v, want %q", env.Error, exceptions.ErrUserNotFound.Error())
+	}
+}
+
+/*
+Updating an id with no row behind it fails the same way.
+*/
+func TestHTTP_PutMissingUserIs500(t *testing.T) {
+	app := newTestApp()
+
+	status, _ := do(t, app, http.MethodPut, "/users/update/00000000-0000-0000-0000-000000000000",
+		map[string]string{"name": marker(t) + "Ada"})
+
+	if status != http.StatusInternalServerError {
+		t.Fatalf("PUT missing user = %d, want 500", status)
 	}
 }
 
@@ -224,118 +236,59 @@ func TestHTTP_ValidationRejectsBadBodies(t *testing.T) {
 	app := newTestApp()
 
 	cases := map[string]map[string]any{
-		"missing surename": {"name": "Ada"},
-		"empty name":       {"name": "", "surename": "Lovelace"},
-		"name over 200":    {"name": string(bytes.Repeat([]byte("a"), 201)), "surename": "Lovelace"},
+		"missing name":  {},
+		"empty name":    {"name": ""},
+		"name over 255": {"name": string(bytes.Repeat([]byte("a"), 256))},
 	}
 
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
-			status, _ := do(t, app, http.MethodPost, "/users", body)
+			status, _ := do(t, app, http.MethodPost, "/users/newData", body)
 			if status != http.StatusBadRequest {
-				t.Errorf("POST /users = %d, want 400", status)
+				t.Errorf("POST /users/newData = %d, want 400", status)
 			}
 		})
 	}
 }
 
 /*
-PATCH means "replace", not "merge" — both fields are required, so an empty body
-cannot be turned into an UPDATE. This is the client's mistake: 400, not 500.
+name is required on PUT too, so an empty body cannot be turned into an
+UPDATE. This is the client's mistake: 400, not 500.
 */
-func TestHTTP_PatchWithNoFieldsIs400(t *testing.T) {
+func TestHTTP_PutWithNoFieldsIs400(t *testing.T) {
 	app := newTestApp()
 	m := marker(t)
 
-	_, env := do(t, app, http.MethodPost, "/users", map[string]string{
-		"name": m + "Ada", "surename": "Lovelace",
-	})
+	_, env := do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + "Ada"})
 	id := decodeUser(t, env.Items).ID
 
-	status, _ := do(t, app, http.MethodPatch, "/users/"+id, map[string]any{})
+	status, _ := do(t, app, http.MethodPut, "/users/update/"+id, map[string]any{})
 
 	if status != http.StatusBadRequest {
-		t.Fatalf("PATCH with empty body = %d, want 400", status)
+		t.Fatalf("PUT with empty body = %d, want 400", status)
 	}
 }
 
 /*
-PATCH with only one field is the same 400 as an empty body: both fields are
-required, so sending just "name" cannot be turned into an UPDATE either.
+PUT answers 200. The controller reports the literal "SUCCESS" rather than
+the updated row, so the fetch-back is what actually proves the write landed.
 */
-func TestHTTP_PatchWithOneFieldIs400(t *testing.T) {
+func TestHTTP_PutUpdatesName(t *testing.T) {
 	app := newTestApp()
 	m := marker(t)
 
-	_, env := do(t, app, http.MethodPost, "/users", map[string]string{
-		"name": m + "Ada", "surename": "Lovelace",
-	})
+	_, env := do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + "Ada"})
 	id := decodeUser(t, env.Items).ID
 
-	status, _ := do(t, app, http.MethodPatch, "/users/"+id, map[string]string{"name": m + "Grace"})
-
-	if status != http.StatusBadRequest {
-		t.Fatalf("PATCH with only name = %d, want 400", status)
-	}
-}
-
-/*
-The full-replace guarantee, seen from outside: send both fields, PATCH answers
-200. The controller reports the literal "SUCCESS" rather than the updated row
-(see the other endpoints' envelope), so the fetch-back is what actually proves
-the write landed.
-*/
-func TestHTTP_PatchReplacesBothFields(t *testing.T) {
-	app := newTestApp()
-	m := marker(t)
-
-	_, env := do(t, app, http.MethodPost, "/users", map[string]string{
-		"name": m + "Ada", "surename": "Lovelace",
-	})
-	id := decodeUser(t, env.Items).ID
-
-	status, _ := do(t, app, http.MethodPatch, "/users/"+id, map[string]string{
-		"name": m + "Grace", "surename": "Hopper",
-	})
+	status, _ := do(t, app, http.MethodPut, "/users/update/"+id, map[string]string{"name": m + "Grace"})
 	if status != http.StatusOK {
-		t.Fatalf("PATCH = %d, want 200", status)
+		t.Fatalf("PUT = %d, want 200", status)
 	}
 
-	_, env = do(t, app, http.MethodGet, "/users/"+id, nil)
+	_, env = do(t, app, http.MethodGet, "/users/info/"+id, nil)
 	updated := decodeUser(t, env.Items)
 	if updated.Name != m+"Grace" {
 		t.Errorf("Name = %q, want %q", updated.Name, m+"Grace")
-	}
-	if updated.Surename != "Hopper" {
-		t.Errorf("Surename = %q, want %q", updated.Surename, "Hopper")
-	}
-}
-
-/*
-The literal /bulk route is registered before /:id. If that order is ever
-reversed this request is routed to GetUser with id="bulk" and fails on the uuid
-check, so the 400 this test would see is the symptom to recognise.
-*/
-func TestHTTP_BulkCreatesEveryRow(t *testing.T) {
-	app := newTestApp()
-	m := marker(t)
-
-	status, env := do(t, app, http.MethodPost, "/users/bulk", map[string]any{
-		"users": []map[string]string{
-			{"name": m + "Ada", "surename": "Lovelace"},
-			{"name": m + "Grace", "surename": "Hopper"},
-		},
-	})
-	if status != http.StatusCreated {
-		t.Fatalf("POST /users/bulk = %d, want 201 (%v)", status, env.Error)
-	}
-
-	var created []responsebody.User
-	if err := json.Unmarshal(env.Items, &created); err != nil {
-		t.Fatalf("decode list: %v", err)
-	}
-	if len(created) != 2 {
-		t.Fatalf("created %d users, want 2", len(created))
 	}
 }
 
@@ -350,12 +303,12 @@ func TestHTTP_ListFilterAndPagination(t *testing.T) {
 	m := marker(t)
 
 	for _, n := range []string{"A", "B", "C"} {
-		do(t, app, http.MethodPost, "/users", map[string]string{"name": m + n, "surename": "Surname"})
+		do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + n})
 	}
 
-	status, env := do(t, app, http.MethodGet, "/users?q="+m+"&page=1&per_page=2", nil)
+	status, env := do(t, app, http.MethodGet, "/users/getData?q="+m+"&page=1&per_page=2", nil)
 	if status != http.StatusOK {
-		t.Fatalf("GET /users = %d, want 200", status)
+		t.Fatalf("GET /users/getData = %d, want 200", status)
 	}
 
 	var items listItems
@@ -391,7 +344,7 @@ into an empty Go slice and the distinction would be lost.
 func TestHTTP_ListWithNoMatchesIsEmptyArray(t *testing.T) {
 	app := newTestApp()
 
-	_, env := do(t, app, http.MethodGet, "/users?q="+marker(t), nil)
+	_, env := do(t, app, http.MethodGet, "/users/getData?q="+marker(t), nil)
 
 	var items listItems
 	if err := json.Unmarshal(env.Items, &items); err != nil {
@@ -404,30 +357,26 @@ func TestHTTP_ListWithNoMatchesIsEmptyArray(t *testing.T) {
 }
 
 /*
-DeleteUser is idempotent (no rows-affected check) and every service error maps
-to 500 (no toHTTPError), so the missing-row cases below read 500 / 200 rather
-than the 404s a fuller implementation would give.
+Delete answers 200 once; afterwards the row is gone, so both reading it and
+deleting it again fail with 500 ("user not found").
 */
 func TestHTTP_Delete(t *testing.T) {
 	app := newTestApp()
 	m := marker(t)
 
-	_, env := do(t, app, http.MethodPost, "/users", map[string]string{
-		"name": m + "Ada", "surename": "Lovelace",
-	})
+	_, env := do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + "Ada"})
 	id := decodeUser(t, env.Items).ID
 
 	if status, _ := do(t, app, http.MethodDelete, "/users/"+id, nil); status != http.StatusOK {
 		t.Fatalf("DELETE = %d, want 200", status)
 	}
 
-	if status, _ := do(t, app, http.MethodGet, "/users/"+id, nil); status != http.StatusInternalServerError {
+	if status, _ := do(t, app, http.MethodGet, "/users/info/"+id, nil); status != http.StatusInternalServerError {
 		t.Fatalf("GET after delete = %d, want 500", status)
 	}
 
-	// DELETE has no rows-affected check, so deleting an already-deleted id is
-	// still a no-op success, not a 404.
-	if status, _ := do(t, app, http.MethodDelete, "/users/"+id, nil); status != http.StatusOK {
-		t.Fatalf("second DELETE = %d, want 200", status)
+	// DeleteUser checks rows affected, so a second delete finds nothing.
+	if status, _ := do(t, app, http.MethodDelete, "/users/"+id, nil); status != http.StatusInternalServerError {
+		t.Fatalf("second DELETE = %d, want 500", status)
 	}
 }

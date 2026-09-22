@@ -17,6 +17,13 @@ call and no manager threaded through every route file.
 var verifier *appjwt.RSAManager
 
 /*
+userIDKey is the c.Locals key for the verified subject. An unexported type, not
+a string: nothing outside this package can write to it, so no other code can
+replace a verified subject with an unverified one.
+*/
+type userIDKey struct{}
+
+/*
 Init builds the verify-only RS256 manager RequireAuth uses, from
 JWT_RSA_PUBLIC_KEY_PATH. Call it once at startup, before any route using
 RequireAuth is mounted — see examples/login/README.md.
@@ -46,7 +53,8 @@ func Init() error {
 /*
 RequireAuth rejects a request unless it carries a valid RS256 bearer token.
 
-On success the token's claim goes into c.Locals for downstream handlers,.
+On success the token's subject goes into c.Locals for downstream handlers,
+which read it with UserID.
 */
 func RequireAuth(c fiber.Ctx) error {
 	if verifier == nil {
@@ -69,7 +77,7 @@ func RequireAuth(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid or expired token")
 	}
 
-	c.Locals("user", claims)
+	c.Locals(userIDKey{}, claims.Subject)
 	return c.Next()
 }
 
@@ -81,8 +89,7 @@ it, or mounted above it in the chain. Check it: ignoring it turns a missing
 middleware into a 200 with an empty user ID instead of a 401.
 */
 func UserID(c fiber.Ctx) (string, bool) {
-	user := c.Locals("user")
-	id, ok := user.(string)
+	id, ok := c.Locals(userIDKey{}).(string)
 	return id, ok && id != ""
 }
 

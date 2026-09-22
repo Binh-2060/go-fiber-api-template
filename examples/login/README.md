@@ -159,7 +159,7 @@ It reads the `Authorization: Bearer <token>` header (scheme matched
 case-insensitively, per RFC 6750), verifies against the package's own verify-only
 `*appjwt.RSAManager` from `Init()`, and stashes the subject in `c.Locals` on success.
 `internal/api/middlewares/` doesn't exist yet in the base template (per the root
-`CLAUDE.md`, it's created by the first real feature that needs it) — this example's
+`AGENT.md`, it's created by the first real feature that needs it) — this example's
 copy is the pattern to lift into it.
 
 Three details worth keeping when you copy it:

@@ -13,7 +13,7 @@ import (
 // output through presenters. Anything else belongs a layer down.
 
 /*
-POST /users — create a user.
+POST /users/newData — create a user.
 */
 func CreateUser(c fiber.Ctx) error {
 	var body requestbody.CreateUser
@@ -29,28 +29,11 @@ func CreateUser(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(presenters.ResponseSuccess(user))
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(user))
 }
 
 /*
-POST /users/bulk — create many users in one transaction.
-*/
-func CreateUsers(c fiber.Ctx) error {
-	var body requestbody.CreateUsers
-	if err := validators.ParseAndValidateBody(c, &body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-
-	users, err := services.CreateUsers(c.Context(), body)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(presenters.ResponseSuccess(users))
-}
-
-/*
-GET /users?page=&per_page= — list users, paginated.
+GET /users/getData?page=&per_page=&q= — list users, paginated.
 */
 func ListUsers(c fiber.Ctx) error {
 	var query requestbody.ListUsers
@@ -69,12 +52,12 @@ func ListUsers(c fiber.Ctx) error {
 }
 
 /*
-GET /users/:id — fetch one user.
+GET /users/info/:id — fetch one user.
 */
 func GetUser(c fiber.Ctx) error {
-	id, err := userID(c)
-	if err != nil {
-		return err
+	id := c.Params("id")
+	if err := validators.ValidateUuid(id); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	user, err := services.GetUser(c.Context(), id)
@@ -86,12 +69,12 @@ func GetUser(c fiber.Ctx) error {
 }
 
 /*
-PATCH /users/:id — partial update. Omitted fields keep their stored value.
+PUT /users/update/:id — replace the user's fields.
 */
 func UpdateUser(c fiber.Ctx) error {
-	id, err := userID(c)
-	if err != nil {
-		return err
+	id := c.Params("id")
+	if err := validators.ValidateUuid(id); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	var body requestbody.UpdateUser
@@ -99,8 +82,7 @@ func UpdateUser(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	err = services.UpdateUser(c.Context(), id, body)
-	if err != nil {
+	if err := services.UpdateUser(c.Context(), id, body); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
@@ -111,9 +93,9 @@ func UpdateUser(c fiber.Ctx) error {
 DELETE /users/:id — delete one user.
 */
 func DeleteUser(c fiber.Ctx) error {
-	id, err := userID(c)
-	if err != nil {
-		return err
+	id := c.Params("id")
+	if err := validators.ValidateUuid(id); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	if err := services.DeleteUser(c.Context(), id); err != nil {
@@ -121,22 +103,4 @@ func DeleteUser(c fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(nil))
-}
-
-/*
-Read and validate the :id path param.
-
-Rejecting a malformed uuid here keeps a guaranteed-empty query off the database
-and returns 400 (bad input) rather than 404 (valid input, no such row).
-
-The alternative is c.Bind().URI(&out) with `uri:"id"` tags, which is worth it
-once a route has several params; for a single uuid this is less ceremony.
-*/
-func userID(c fiber.Ctx) (string, error) {
-	id := c.Params("id")
-	if err := validators.ValidateUuid(id); err != nil {
-		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-
-	return id, nil
 }
