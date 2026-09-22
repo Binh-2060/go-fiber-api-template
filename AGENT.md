@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Read and follow these rules before starting any work:**
+
+@.ai/rules/00-code-begin.md
+
 ## What this is
 
 A minimal boilerplate/template for a Go REST API built on [Fiber v3](https://github.com/gofiber/fiber) (v3.4.0). It exists to be copied/forked as the starting point for real services — the packages under `internal/api/` contain only "sample" placeholder code demonstrating the intended structure. The one fully worked feature is [`examples/crud`](examples/crud/README.md) — a users CRUD, compiled but deliberately not mounted.
