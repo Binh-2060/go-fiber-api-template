@@ -26,3 +26,5 @@ build/*
 MY_NOTE.txt
 tmp/
 postgres_data
+private.pem
+public.pem
