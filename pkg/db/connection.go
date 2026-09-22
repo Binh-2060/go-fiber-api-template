@@ -75,7 +75,7 @@ Build a libpq-style connection string.
 The password is URL-encoded rather than concatenated, so passwords containing
 '@', '/' or ':' do not corrupt the DSN.
 */
-func (c Config) dsn() string {
+func (c Config) DSN() string {
 	if c.URL != "" {
 		return c.URL
 	}
@@ -106,7 +106,7 @@ func Init(ctx context.Context, cfg Config) error {
 		return errors.New("db: already initialised")
 	}
 
-	poolCfg, err := pgxpool.ParseConfig(cfg.dsn())
+	poolCfg, err := pgxpool.ParseConfig(cfg.DSN())
 	if err != nil {
 		return fmt.Errorf("db: parse config: %w", err)
 	}

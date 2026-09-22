@@ -1,25 +1,18 @@
 package models
 
-import "time"
-
 /*
-User mirrors the `users` table (see examples/crud/README.md):
+User is the repository's own model: the columns its queries return, typed from
+the reference internal/api/models/gen/users.gen.go (never imported):
 
-	id         uuid                     default gen_random_uuid() not null primary key
-	name       varchar(200)             default 'N/A'             not null
-	created_at timestamp with time zone default now()             not null
-	surename   varchar(200)                                       not null
+	id   uuid         default gen_random_uuid() not null primary key
+	name varchar(255)                           not null
 
-Field order matches the column list in repositories.userColumns so the same
-scan order works for every query.
-
-NOTE: `surename` is spelled that way in the table. The model keeps the
-column's spelling rather than silently diverging from the schema — rename the
-column first if you want `surname`.
+A model is shaped by its queries, not by the table — columns the example never
+reads are left out. Field order matches repositories.userColumns so the same
+scan order works for every query. Re-check it against the reference after
+`go run ./cmd/gorm`.
 */
 type User struct {
-	ID        string
-	Name      string
-	Surename  string
-	CreatedAt time.Time
+	ID   string
+	Name string
 }

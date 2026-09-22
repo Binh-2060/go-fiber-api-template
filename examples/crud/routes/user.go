@@ -15,14 +15,13 @@ app, add to internal/api/routes/routes.go:
 	userRoutes := router.Group("/users")
 	crudroutes.SetUserRoute(userRoutes)
 
-/bulk is registered before /:id so the literal segment is not swallowed by the
-param route.
+GET /getData and GET /info/:id never collide: /info/:id has two segments.
+Only DELETE uses a bare /:id.
 */
 func SetUserRoute(router fiber.Router) {
-	router.Post("/", controllers.CreateUser)
-	router.Post("/bulk", controllers.CreateUsers)
-	router.Get("/", controllers.ListUsers)
-	router.Get("/:id", controllers.GetUser)
-	router.Patch("/:id", controllers.UpdateUser)
+	router.Post("/newData", controllers.CreateUser)
+	router.Get("/getData", controllers.ListUsers)
+	router.Get("/info/:id", controllers.GetUser)
+	router.Put("/update/:id", controllers.UpdateUser)
 	router.Delete("/:id", controllers.DeleteUser)
 }
