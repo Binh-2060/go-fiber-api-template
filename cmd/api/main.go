@@ -18,7 +18,7 @@ import (
 	"github.com/Binh-2060/go-application-template/internal/config/helmet"
 	"github.com/Binh-2060/go-application-template/internal/config/limiter"
 	"github.com/Binh-2060/go-application-template/internal/config/logger"
-	requestid "github.com/Binh-2060/go-application-template/internal/config/requestId"
+	"github.com/Binh-2060/go-application-template/internal/config/requestid"
 	"github.com/Binh-2060/go-application-template/pkg/db"
 	"github.com/gofiber/fiber/v3"
 )
@@ -72,7 +72,7 @@ func main() {
 	app := fiber.New(myConfig)
 	//CORS
 	cors.SetCORSMiddleware(app)
-	//requestId
+	// request ID
 	requestid.SetRequestIdMiddleware(app)
 	//validators
 	validators.Init()
