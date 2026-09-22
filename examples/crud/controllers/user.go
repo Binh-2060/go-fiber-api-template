@@ -56,7 +56,7 @@ GET /users/info/:id — fetch one user.
 */
 func GetUser(c fiber.Ctx) error {
 	id := c.Params("id")
-	if err := validators.ValidateUuid(id); err != nil {
+	if err := validators.ValidateUUID(id); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -73,7 +73,7 @@ PUT /users/update/:id — replace the user's fields.
 */
 func UpdateUser(c fiber.Ctx) error {
 	id := c.Params("id")
-	if err := validators.ValidateUuid(id); err != nil {
+	if err := validators.ValidateUUID(id); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -94,7 +94,7 @@ DELETE /users/:id — delete one user.
 */
 func DeleteUser(c fiber.Ctx) error {
 	id := c.Params("id")
-	if err := validators.ValidateUuid(id); err != nil {
+	if err := validators.ValidateUUID(id); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 

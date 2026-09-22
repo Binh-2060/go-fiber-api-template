@@ -128,4 +128,4 @@ Points where v3 differs from the v2 idioms in most online examples:
 - Handlers take `fiber.Ctx` **by value** — `Ctx` is an interface in v3.
 - `c.Context()` returns a `context.Context` (use `c.RequestCtx()` for the fasthttp one).
 - Binding replaces parsing: `validators.ParseAndValidateBody` / `ParseAndValidateQueryParam` wrap `c.Bind().Body` / `.Query`. Query tags are `query:"..."`; typed helpers like `QueryInt` are gone.
-- Path params could also be bound with `c.Bind().URI(&out)` and `uri:"id"` tags (v2 used `params:"..."`). This example uses `c.Params` + `validators.ValidateUuid`, which is less ceremony for a single param.
+- Path params could also be bound with `c.Bind().URI(&out)` and `uri:"id"` tags (v2 used `params:"..."`). This example uses `c.Params` + `validators.ValidateUUID`, which is less ceremony for a single param.

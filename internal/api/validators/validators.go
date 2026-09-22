@@ -35,7 +35,7 @@ func validateStructWithTags(data interface{}) error {
 /*
 Validate uuid string input
 */
-func ValidateUuid(uuid string) error {
+func ValidateUUID(uuid string) error {
 	err := validatorObj.Var(uuid, "required,uuid")
 	if err != nil {
 		return errors.New("Invalid uuid")
