@@ -77,11 +77,11 @@ type envelope struct {
 
 // The extra nesting ResponseSuccessListData adds inside items.
 type listItems struct {
-	ListData   json.RawMessage `json:"list_data"`
+	ListData   json.RawMessage `json:"listData"`
 	Pagination struct {
-		CurrentPage          int `json:"current_page"`
-		CurrentPageTotalItem int `json:"current_page_total_item"`
-		TotalPage            int `json:"total_page"`
+		CurrentPage          int `json:"currentPage"`
+		CurrentPageTotalItem int `json:"currentPageTotalItem"`
+		TotalPage            int `json:"totalPage"`
 	} `json:"pagination"`
 }
 
@@ -306,7 +306,7 @@ func TestHTTP_ListFilterAndPagination(t *testing.T) {
 		do(t, app, http.MethodPost, "/users/newData", map[string]string{"name": m + n})
 	}
 
-	status, env := do(t, app, http.MethodGet, "/users/getData?q="+m+"&page=1&per_page=2", nil)
+	status, env := do(t, app, http.MethodGet, "/users/getData?q="+m+"&page=1&perPage=2", nil)
 	if status != http.StatusOK {
 		t.Fatalf("GET /users/getData = %d, want 200", status)
 	}
@@ -318,21 +318,21 @@ func TestHTTP_ListFilterAndPagination(t *testing.T) {
 
 	var users []responsebody.User
 	if err := json.Unmarshal(items.ListData, &users); err != nil {
-		t.Fatalf("decode list_data: %v", err)
+		t.Fatalf("decode listData: %v", err)
 	}
 
 	if len(users) != 2 {
 		t.Errorf("page has %d rows, want 2", len(users))
 	}
 	if items.Pagination.CurrentPage != 1 {
-		t.Errorf("current_page = %d, want 1", items.Pagination.CurrentPage)
+		t.Errorf("currentPage = %d, want 1", items.Pagination.CurrentPage)
 	}
 	if items.Pagination.CurrentPageTotalItem != 2 {
-		t.Errorf("current_page_total_item = %d, want 2", items.Pagination.CurrentPageTotalItem)
+		t.Errorf("currentPageTotalItem = %d, want 2", items.Pagination.CurrentPageTotalItem)
 	}
 	// Ceiling of 3/2 — the assertion that catches integer division truncating.
 	if items.Pagination.TotalPage != 2 {
-		t.Errorf("total_page = %d, want 2", items.Pagination.TotalPage)
+		t.Errorf("totalPage = %d, want 2", items.Pagination.TotalPage)
 	}
 }
 
@@ -352,7 +352,7 @@ func TestHTTP_ListWithNoMatchesIsEmptyArray(t *testing.T) {
 	}
 
 	if got := string(items.ListData); got != "[]" {
-		t.Errorf("list_data = %s, want []", got)
+		t.Errorf("listData = %s, want []", got)
 	}
 }
 

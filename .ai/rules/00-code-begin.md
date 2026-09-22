@@ -23,6 +23,7 @@ Route paths are camelCase too: `/users/newData`, `/users/getData`, `/users/info/
 Not Go identifiers, so they keep their own style — don't rename them:
 
 - Database tables and columns: `snake_case` (`users`, `created_at`).
-- JSON and query keys (`json:"..."`, `query:"..."`, `form:"..."`): `snake_case`, matching the columns and existing responses (`per_page`, `current_page`, `list_data`). Renaming one breaks clients.
+- JSON and query keys (`json:"..."`, `query:"..."`, `form:"..."`): `snake_case`, matching the columns (`created_at`). Renaming one breaks clients.
+- Exceptions, camelCase: the list envelope from `presenters.ResponseSuccessListData` (`listData`, `pagination.currentPage`, `currentPageTotalItem`, `totalPage`) and the paging query key `perPage`.
 - File names: lowercase, `_` between words (`user_route_test.go`, `users.gen.go`).
 - Env vars: `UPPER_SNAKE_CASE` (`JWT_TTL`, `DB_HOST`).
