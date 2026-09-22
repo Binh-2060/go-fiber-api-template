@@ -34,11 +34,11 @@ func ResponseSuccessListData(data interface{}, currentPage, currentPageTotalItem
 		"timestamp": t.Format("2006-01-02-15-04-05"),
 		"status":    SUCCESS,
 		"items": fiber.Map{
-			"list_data": data,
+			"listData": data,
 			"pagination": fiber.Map{
-				"current_page":            currentPage,
-				"current_page_total_item": currentPageTotalItem,
-				"total_page":              totalPage,
+				"currentPage":          currentPage,
+				"currentPageTotalItem": currentPageTotalItem,
+				"totalPage":            totalPage,
 			},
 		},
 		"error": nil,

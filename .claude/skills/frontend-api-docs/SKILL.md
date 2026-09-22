@@ -43,7 +43,7 @@ Find the handler in `controllers/<feature>.go` and classify each input:
 Response, from the `presenters` call:
 
 - `ResponseSuccess(x)` → `items` is `x`. Follow `x` to its type: the service's return type, usually a `schemas/responsebody` struct (keys = `json` tags). `ResponseSuccess("SUCCESS")` → `items: "SUCCESS"`; `ResponseSuccess(nil)` → `items: null`; `fiber.Map{...}` → use its literal keys.
-- `ResponseSuccessListData(list, cur, count, total)` → `items: { list_data: T[], pagination: { current_page, current_page_total_item, total_page } }`. If `-1` is passed, say pagination is unused (all `-1`).
+- `ResponseSuccessListData(list, cur, count, total)` → `items: { listData: T[], pagination: { currentPage, currentPageTotalItem, totalPage } }`. If `-1` is passed, say pagination is unused (all `-1`).
 - Default paging values (e.g. `defaultPage`, `defaultPerPage`) are in the service; copy them.
 
 ## 3. Translate Go into frontend terms
@@ -73,7 +73,7 @@ Response, from the `presenters` call:
 
 All errors use the envelope `{ timestamp, status: 0, items: null, error: "<message>" }` (the `ErrorHandler` in `cmd/api/main.go`). Build the endpoint's error table from what the code really returns:
 
-- **400** from `ParseAndValidateBody` / `ParseAndValidateQueryParam`: body is `Field '<GoFieldName>' | Needs to pass '<tag>' validation`. **The field name is the Go struct field (`PerPage`), not the JSON key (`per_page`).** List the Go→JSON mapping so the UI can map it back to a form field. Malformed JSON also gives 400 (Fiber's bind error).
+- **400** from `ParseAndValidateBody` / `ParseAndValidateQueryParam`: body is `Field '<GoFieldName>' | Needs to pass '<tag>' validation`. **The field name is the Go struct field (`PerPage`), not the JSON key (`perPage`).** List the Go→JSON mapping so the UI can map it back to a form field. Malformed JSON also gives 400 (Fiber's bind error).
 - **400** `Invalid uuid` for validated path params.
 - **401** messages from the auth middleware / controller.
 - **Feature errors:** every `errors.New("...")` in `exceptions/<feature>.go` the endpoint can reach (trace repository → service → controller). Use the **status the controller actually uses**: by project rule that is usually **500** even for "not found". Write 500, not 404. Add a note that the UI should branch on the `error` string.

@@ -33,7 +33,7 @@ func CreateUser(c fiber.Ctx) error {
 }
 
 /*
-GET /users/getData?page=&per_page=&q= — list users, paginated.
+GET /users/getData?page=&perPage=&q= — list users, paginated.
 */
 func ListUsers(c fiber.Ctx) error {
 	var query requestbody.ListUsers
@@ -102,5 +102,5 @@ func DeleteUser(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(nil))
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess("SUCCESS"))
 }

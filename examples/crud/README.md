@@ -19,7 +19,7 @@ Follow [`.ai/workings/00-crud.md`](../../.ai/workings/00-crud.md): it starts fro
 | Method   | Path                | Body / query                    | Success |
 | -------- | ------------------- | ------------------------------- | ------- |
 | `POST`   | `/users/newData`    | `{name}`                        | 200     |
-| `GET`    | `/users/getData`    | `?page=1&per_page=20&q=ada`     | 200     |
+| `GET`    | `/users/getData`    | `?page=1&perPage=20&q=ada`      | 200     |
 | `GET`    | `/users/info/:id`   | —                               | 200     |
 | `PUT`    | `/users/update/:id` | `{name}`                        | 200     |
 | `DELETE` | `/users/:id`        | —                               | 200     |
@@ -58,7 +58,7 @@ curl -X POST localhost:$PORT/api/$API_VERSION/users/newData \
 
 **`exceptions/`** — every error the feature returns on purpose (`ErrUserNotFound`, `ErrNoUpdateFields`). It imports nothing from the feature, so any layer can use these values without an import cycle. They are plain Go error values, checked with `errors.Is`.
 
-**`services/`** — orchestration. `CreateUser`, `UpdateUser` and `DeleteUser` write inside `db.ExecTx`, so an error rolls the write back. `ListUsers` runs its count and its page as two separate queries, sharing one filter: if rows are added or deleted between them, `total_page` can be off by a little. That is normal for a paginated list and keeps the code simple; wrap both in `db.ExecTxOptions` with `pgx.RepeatableRead` only if a feature needs them to agree exactly (a plain `ExecTx` is not enough — Postgres's default isolation can still see changes between the two queries).
+**`services/`** — orchestration. `CreateUser`, `UpdateUser` and `DeleteUser` write inside `db.ExecTx`, so an error rolls the write back. `ListUsers` runs its count and its page as two separate queries, sharing one filter: if rows are added or deleted between them, `totalPage` can be off by a little. That is normal for a paginated list and keeps the code simple; wrap both in `db.ExecTxOptions` with `pgx.RepeatableRead` only if a feature needs them to agree exactly (a plain `ExecTx` is not enough — Postgres's default isolation can still see changes between the two queries).
 
 **`schemas/`** — the wire contract, split from the model on purpose. Request bodies are derived from `internal/api/models/gen/users.gen.go` (see `.ai/workings/00-crud.md`): `name` is `not null varchar(255)`, so it is `required,max=255`; `id` is filled by the database and never sent. The repository's `UpdateUser` takes `*string` per column and skips nils in the `SET` clause, so a partial update is ready once the table has more columns.
 
@@ -73,7 +73,7 @@ The repository uses both, on purpose — the split is the lesson.
 **[Squirrel](https://github.com/Masterminds/squirrel)** for `ListUsers`, `CountUsers` and `UpdateUser`, where the SQL genuinely is not known until runtime:
 
 - `?q=` adds a `WHERE`, `UpdateUser` sets only the columns that are non-nil. Doing that by hand means concatenating clause fragments and hand-numbering `$1, $2, $3` as conditions come and go — the source of both injection bugs and placeholder off-by-ones.
-- `applyUserFilter` is shared by the list and the count, so a filtered page and its `total_page` can't be computed from different `WHERE` clauses.
+- `applyUserFilter` is shared by the list and the count, so a filtered page and its `totalPage` can't be computed from different `WHERE` clauses.
 
 Two things to know about using Squirrel here:
 

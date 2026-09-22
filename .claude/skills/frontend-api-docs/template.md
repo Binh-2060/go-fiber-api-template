@@ -76,12 +76,12 @@ export interface ApiResponse<T> {
   error: string | null;   // message on error; null on success
 }
 
-export interface Paginated<T> {
-  list_data: T[];         // never null; empty = []
+interface Paginated<T> {
+  listData: T[];          // never null; empty = []
   pagination: {
-    current_page: number;
-    current_page_total_item: number;
-    total_page: number;   // all three are -1 when the endpoint doesn't paginate
+    currentPage: number;
+    currentPageTotalItem: number;
+    totalPage: number;    // all three are -1 when the endpoint doesn't paginate
   };
 }
 ```

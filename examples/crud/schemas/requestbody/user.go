@@ -36,6 +36,6 @@ repository exists for.
 */
 type ListUsers struct {
 	Page    int    `query:"page" validate:"omitempty,min=1"`
-	PerPage int    `query:"per_page" validate:"omitempty,min=1,max=100"`
+	PerPage int    `query:"perPage" validate:"omitempty,min=1,max=100"`
 	Q       string `query:"q" validate:"omitempty,max=255"`
 }
