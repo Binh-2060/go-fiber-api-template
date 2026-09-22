@@ -3,7 +3,7 @@ package models
 import "time"
 
 /*
-User mirrors the `users` table defined in migrations/users.sql:
+User mirrors the `users` table (see examples/crud/README.md):
 
 	id         uuid                     default gen_random_uuid() not null primary key
 	name       varchar(200)             default 'N/A'             not null
@@ -13,9 +13,9 @@ User mirrors the `users` table defined in migrations/users.sql:
 Field order matches the column list in repositories.userColumns so the same
 scan order works for every query.
 
-NOTE: `surename` is spelled that way in the migration. The model keeps the
-column's spelling rather than silently diverging from the schema — fix it in a
-migration first if you want `surname`.
+NOTE: `surename` is spelled that way in the table. The model keeps the
+column's spelling rather than silently diverging from the schema — rename the
+column first if you want `surname`.
 */
 type User struct {
 	ID        string

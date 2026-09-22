@@ -7,7 +7,7 @@ Both text columns are here and both are required, which is the rule for every
 varchar/text column: the client owns the value, so the API always lets it
 supply one.
 
-`name` is `default 'N/A' not null` in the migration and is still required. A
+`name` is `default 'N/A' not null` in the table and is still required. A
 default on a text column is a fallback for hand-written SQL inserts, not a
 reason to drop the field from the API — leaving it out would produce users
 nobody can name at creation, only rename afterwards. Only server-generated

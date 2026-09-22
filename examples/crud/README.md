@@ -1,6 +1,6 @@
 # Example: users CRUD
 
-A complete feature built on the `users` table in [`migrations/users.sql`](../../migrations/users.sql), showing how a request travels through every layer of this template.
+A complete feature built on a `users` table, showing how a request travels through every layer of this template.
 
 ```
 routes → controllers → services → repositories → pkg/db
@@ -11,13 +11,16 @@ routes → controllers → services → repositories → pkg/db
 ## The table
 
 ```sql
-id         uuid                     default gen_random_uuid() not null primary key
-name       varchar(200)             default 'N/A'             not null
-created_at timestamp with time zone default now()             not null
-surename   varchar(200)                                       not null
+create table users
+(
+    id         uuid                     default gen_random_uuid() not null primary key,
+    name       varchar(200)             default 'N/A'             not null,
+    created_at timestamp with time zone default now()             not null,
+    surename   varchar(200)                                       not null
+);
 ```
 
-`surename` is spelled that way in the migration; the code follows the schema rather than diverging from it. Rename it in a migration if you want `surname`.
+`surename` is spelled that way in the table; the code follows the schema rather than diverging from it. Rename the column if you want `surname`.
 
 ## Endpoints
 
@@ -46,11 +49,9 @@ func SetRoutes(router fiber.Router) {
 }
 ```
 
-Then apply the migration and hit it:
+Then create the table (the `create table` statement above) and hit it:
 
 ```bash
-psql "$DATABASE_URL" -f migrations/users.sql
-
 curl -X POST localhost:$PORT/api/$API_VERSION/users \
   -H 'Content-Type: application/json' \
   -d '{"name":"Ada","surename":"Lovelace"}'

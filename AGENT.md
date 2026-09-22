@@ -1,10 +1,10 @@
-# AGENT.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is
 
-A minimal boilerplate/template for a Go REST API built on [Fiber v3](https://github.com/gofiber/fiber) (v3.4.0). It exists to be copied/forked as the starting point for real services — the packages under `internal/api/` contain only "sample" placeholder code demonstrating the intended structure. The one fully worked feature is [`examples/crud`](examples/crud/README.md) — a users CRUD on `migrations/users.sql`, compiled but deliberately not mounted.
+A minimal boilerplate/template for a Go REST API built on [Fiber v3](https://github.com/gofiber/fiber) (v3.4.0). It exists to be copied/forked as the starting point for real services — the packages under `internal/api/` contain only "sample" placeholder code demonstrating the intended structure. The one fully worked feature is [`examples/crud`](examples/crud/README.md) — a users CRUD, compiled but deliberately not mounted.
 
 **Requires Go 1.25+** — Fiber v3's own `go.mod` declares `go 1.25.0`, so the toolchain floor is not optional.
 
@@ -39,7 +39,7 @@ Request flow: `main.go` → global middleware → versioned route group → feat
 
   Both `ConfigFromEnv` and `RSAConfigFromEnv` return an error: a set-but-unparseable `JWT_TTL` (`24` with no unit) fails at startup instead of silently falling back to the 24h default. Tests live in `pkg/jwt/tests` and are untagged — no database, so they run on every `go test ./...`.
 
-**`internal/api/` only contains `presenters/`, `routes/`, `schemas/` and `validators/` today.** `models/`, `repositories/`, `services/`, `controllers/` and `middlewares/` are described below as the intended layout, but the directories do not exist yet — the first real feature creates them. `examples/crud` is the worked version of every one of them; the `new-feature` skill scaffolds from it.
+**`internal/api/` only contains `presenters/`, `routes/`, `schemas/` and `validators/` today.** `models/`, `repositories/`, `services/`, `controllers/` and `middlewares/` are described below as the intended layout, but the directories do not exist yet — the first real feature creates them. `examples/crud` is the worked version of every one of them.
 
 - **`internal/api/routes/`** — `routes.go` has the top-level `SetRoutes(router fiber.Router)` that groups sub-routers by feature path and delegates to a per-feature `Set<Feature>Route` function (`examples/crud/routes/user.go` is the worked example). It is currently an empty function body. Add a new feature by creating `<feature>.go` here and registering it in `routes.go`.
 - **`internal/api/controllers/`** (to be created) — Fiber handlers (`func(c fiber.Ctx) error` — by value, `Ctx` is an interface in v3). Should stay thin: parse/validate input, call into `internal/api/services`, format output via `internal/api/presenters`.
