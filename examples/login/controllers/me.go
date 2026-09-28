@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Binh-2060/go-application-template/examples/login/middlewares"
+	"github.com/Binh-2060/go-application-template/examples/login/schemas/responsebody"
 	"github.com/Binh-2060/go-application-template/internal/api/presenters"
 	"github.com/gofiber/fiber/v3"
 )
@@ -20,7 +21,7 @@ func Me(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthenticated")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(fiber.Map{
-		"user_id": userID,
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(responsebody.Me{
+		UserID: userID,
 	}))
 }

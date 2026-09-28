@@ -2,14 +2,11 @@ package repositories
 
 import (
 	"context"
-	"errors"
 
+	"github.com/Binh-2060/go-application-template/examples/login/exceptions"
 	"github.com/Binh-2060/go-application-template/examples/login/models"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// ErrUserNotFound is returned when no account matches the given email.
-var ErrUserNotFound = errors.New("repositories: user not found")
 
 /*
 users is a hardcoded in-memory store standing in for pkg/db.
@@ -37,11 +34,11 @@ func init() {
 	seedUser("00000000-0000-0000-0000-000000000001", "demo@example.com", "password123")
 }
 
-// GetUserByEmail looks up a user by email, or ErrUserNotFound.
+// GetUserByEmail looks up a user by email, or exceptions.ErrUserNotFound.
 func GetUserByEmail(_ context.Context, email string) (models.User, error) {
 	user, ok := users[email]
 	if !ok {
-		return models.User{}, ErrUserNotFound
+		return models.User{}, exceptions.ErrUserNotFound
 	}
 
 	return user, nil

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"log"
 	"os"
@@ -63,11 +62,11 @@ func main() {
 		},
 	}
 
-	//fail fast connect database
-	if err := db.Init(context.Background(), db.ConfigFromEnv()); err != nil {
-		log.Fatalf("database connection failed: %v", err)
-	}
-	defer db.Close()
+	//fail fast connect database (uncomment when set enviroment or want to connect DB)
+	// if err := db.Init(context.Background(), db.ConfigFromEnv()); err != nil {
+	// 	log.Fatalf("database connection failed: %v", err)
+	// }
+	// defer db.Close()
 
 	app := fiber.New(myConfig)
 	//CORS

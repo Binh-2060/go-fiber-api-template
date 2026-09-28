@@ -6,3 +6,8 @@ type Login struct {
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"` // seconds
 }
+
+// Me is the wire shape returned by GET /me: the verified caller's user ID.
+type Me struct {
+	UserID string `json:"user_id"`
+}
