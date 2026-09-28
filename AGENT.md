@@ -3,6 +3,7 @@
 @.ai/rules/00-code-begin.md
 @.ai/rules/01-code-rules.md
 @.ai/rules/02-code-response.md
+@.ai/rules/03-code-layers.md
 
 **When unsure, ask — don't guess.** If a requirement is unclear, the docs and the code disagree, a rule conflicts with an example, or a file/table/var mentioned here doesn't exist, stop and ask the maintainer before writing code.
 
@@ -25,15 +26,15 @@ Boilerplate Go REST API on [Fiber v3](https://github.com/gofiber/fiber) (v3.4.0)
 Request flow: `main.go` → global middleware → `/api/{API_VERSION}` group → feature routes → controller → service → repository → presenter.
 
 - **`cmd/api/main.go`** — composition root: middleware (CORS → request ID → validators → compress → helmet), `/` and `/healthz`, `routes.SetRoutes`, graceful shutdown. Its `ErrorHandler` is the only place errors become JSON.
-- **`cmd/gorm`** — generates reference structs into `internal/api/models/gen/<table>.gen.go`. Never imported: repositories use their own hand-written models in `internal/api/models/` (see README).
+- **`cmd/gorm`** — generates reference structs into `internal/api/models/gen/<table>.gen.go` (see README).
 - **`internal/config/*`** — one package per global middleware, each a `SetXMiddleware(app)` called from `main.go`.
-- **`internal/api/`** — `routes/` (`SetRoutes` is empty; register each feature's `Set<Feature>Route` here), `presenters/`, `validators/`, `schemas/` (`requestbody/sample.go`, `responsebody/sample.go` placeholders), `models/` (hand-written repository models; `models/gen/` is generated reference). Feature errors go in `exceptions/<feature>.go` (create the folder with the first one). `controllers/`, `services/`, `repositories/` exist but are empty; `middlewares/auth.go` is a stub.
+- **`internal/api/`** — `routes/` (`SetRoutes` is empty; register each feature's `Set<Feature>Route` here), `presenters/`, `validators/`, `schemas/` (`requestbody/sample.go`, `responsebody/sample.go` placeholders), `models/` (hand-written repository models; `models/gen/` is generated reference). `controllers/`, `services/`, `repositories/`, `exceptions/`, `tests/` are empty (untracked by git, so they may be missing in a fresh clone); `middlewares/auth.go` is a stub.
 - **`internal/api/validators`** — call `ParseAndValidateBody` / `ParseAndValidateQueryParam` / `ValidateUUID`; Fiber's `StructValidator` isn't configured, so `validate:` tags only run through these.
-- **`pkg/db`** (pgx/v5) — repositories use `db.Q(ctx)`, **never `db.Pool()`**: it returns the in-flight tx or the pool. `db.ExecTx(ctx, fn)` commits on nil / rolls back on error; nested calls become savepoints; `ExecTxOptions` for isolation.
+- **`pkg/db`** (pgx/v5) — `db.Q(ctx)` returns the in-flight tx or the pool. `db.ExecTx(ctx, fn)` commits on nil / rolls back on error; nested calls become savepoints; `ExecTxOptions` for isolation.
 - **`pkg/jwt`** — HS256 `Manager` and RS256 `RSAManager`, both `TokenManager`; depend on the interface. Errors are deliberately coarse (`ErrInvalidToken` / `ErrExpiredToken`). `pkg/bcrypt` is an empty stub.
-- **Examples** (compiled, not mounted): `examples/api` (skeleton), `examples/crud` (full users CRUD + tests), `examples/login` (JWT login, in-memory users). `examples/crud/presenters` is dead code — import `internal/api/presenters`.
+- **Examples** (compiled, not mounted): `examples/api` (skeleton), `examples/crud` (full users CRUD + tests), `examples/login` (JWT login, in-memory users). `examples/crud/presenters` is dead code.
 
-**Response envelope:** every response is `{ "timestamp", "status" (1/0), "items", "error" }`. Success goes through `presenters.ResponseSuccess` / `ResponseSuccessListData` (pass `-1` for pagination when unused); never hand-roll `fiber.Map`.
+**Response envelope:** every response is `{ "timestamp", "status" (1/0), "items", "error" }`, built by `internal/api/presenters` (success) and `main.go`'s `ErrorHandler` (errors).
 
 ## Tests
 
@@ -41,8 +42,6 @@ Request flow: `main.go` → global middleware → `/api/{API_VERSION}` group →
 go test ./...                    # pure logic, no database — must stay green with no DB
 go test -tags=integration ./...  # needs Postgres and .env
 ```
-
-Start with controller (HTTP) tests like `examples/crud/tests/user_route_test.go`. A real feature's tests go in `internal/api/tests/<feature>_route_test.go` (one shared `tests` package with one `main_test.go`, created with the first feature). Shared setup is `internal/testsupport`: `testsupport.Main(m)` in `TestMain`, and `testsupport.Marker(t, table, column)` to isolate rows (never truncate). Confirm each test can fail.
 
 ## Logging
 

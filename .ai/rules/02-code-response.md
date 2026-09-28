@@ -16,3 +16,5 @@ return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(result))
 ```
 
 Not `user, err := ...`, `data, err := ...` or `res, err := ...` — always `result`. The error is always `err`.
+
+Every success response goes through `presenters.ResponseSuccess` / `ResponseSuccessListData` (pass `-1` for the pagination values when unused). Never hand-roll `fiber.Map` — send a `responsebody` struct.

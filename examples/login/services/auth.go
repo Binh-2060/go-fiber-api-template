@@ -5,20 +5,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Binh-2060/go-application-template/examples/login/exceptions"
 	"github.com/Binh-2060/go-application-template/examples/login/repositories"
 	"github.com/Binh-2060/go-application-template/examples/login/schemas/requestbody"
 	"github.com/Binh-2060/go-application-template/examples/login/schemas/responsebody"
 	appjwt "github.com/Binh-2060/go-application-template/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
-
-/*
-ErrInvalidCredentials covers both "no such user" and "wrong password".
-
-A caller must not be able to tell the two apart — that's what lets an
-attacker enumerate registered emails one login attempt at a time.
-*/
-var ErrInvalidCredentials = errors.New("services: invalid email or password")
 
 // accessTokenTTL is deliberately short and set here rather than taken from
 // JWT_TTL: a login endpoint should hand out short-lived access tokens
@@ -65,7 +58,7 @@ first branch returning early would let a timing attack distinguish them.
 */
 func Login(ctx context.Context, in requestbody.Login) (responsebody.Login, error) {
 	user, err := repositories.GetUserByEmail(ctx, in.Email)
-	if err != nil && !errors.Is(err, repositories.ErrUserNotFound) {
+	if err != nil && !errors.Is(err, exceptions.ErrUserNotFound) {
 		return responsebody.Login{}, err
 	}
 
@@ -73,7 +66,7 @@ func Login(ctx context.Context, in requestbody.Login) (responsebody.Login, error
 	// as malformed — so this stays constant-time between "no such user" and
 	// "wrong password" without a separate not-found branch.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)); err != nil {
-		return responsebody.Login{}, ErrInvalidCredentials
+		return responsebody.Login{}, exceptions.ErrInvalidCredentials
 	}
 
 	token, err := tokenManager.SignWithTTL(user.ID, accessTokenTTL)

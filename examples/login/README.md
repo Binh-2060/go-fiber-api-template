@@ -117,7 +117,7 @@ curl -X POST localhost:$PORT/api/$API_VERSION/login \
 ```
 
 A wrong password or unknown email both return the same 401 body — see
-`services.ErrInvalidCredentials` — so the endpoint can't be used to enumerate
+`exceptions.ErrInvalidCredentials` — so the endpoint can't be used to enumerate
 registered emails.
 
 Take the `access_token` from that response and call the protected route:
