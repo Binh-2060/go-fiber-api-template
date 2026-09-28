@@ -24,12 +24,12 @@ func CreateUser(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	user, err := services.CreateUser(c.Context(), body)
+	result, err := services.CreateUser(c.Context(), body)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(user))
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(result))
 }
 
 /*
@@ -60,12 +60,12 @@ func GetUser(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	user, err := services.GetUser(c.Context(), id)
+	result, err := services.GetUser(c.Context(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(user))
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(result))
 }
 
 /*

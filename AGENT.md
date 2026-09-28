@@ -2,6 +2,7 @@
 
 @.ai/rules/00-code-begin.md
 @.ai/rules/01-code-rules.md
+@.ai/rules/02-code-response.md
 
 **When unsure, ask — don't guess.** If a requirement is unclear, the docs and the code disagree, a rule conflicts with an example, or a file/table/var mentioned here doesn't exist, stop and ask the maintainer before writing code.
 

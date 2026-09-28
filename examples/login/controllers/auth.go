@@ -19,7 +19,7 @@ func Login(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	token, err := services.Login(c.Context(), body)
+	result, err := services.Login(c.Context(), body)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidCredentials) {
 			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
@@ -27,5 +27,5 @@ func Login(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(token))
+	return c.Status(fiber.StatusOK).JSON(presenters.ResponseSuccess(result))
 }
