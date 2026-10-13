@@ -13,7 +13,9 @@ Boilerplate Go REST API on [Fiber v3](https://github.com/gofiber/fiber) (v3.4.0)
 
 `.env` is loaded (bare `godotenv.Load()`) only when `GO_ENV` is unset — **`.env`, not `.env.development`**, which is just the tracked template to copy. Required: `GO_ENV`, `API_NAME`, `API_VERSION`, `PORT`. Postgres: `DATABASE_URL`, or `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` / `DB_SSLMODE` (+ optional `DB_MAX_CONNS` etc., see `pkg/db`). JWT: `JWT_ISSUER`, `JWT_TTL` (needs a unit: `24h`), plus `JWT_SECRET` for HS256 (`jwt.Manager`) or `JWT_RSA_PRIVATE_KEY_PATH` / `JWT_RSA_PUBLIC_KEY_PATH` for RS256 (`jwt.RSAManager`, used by `examples/login`; a verify-only side needs just the public key).
 
-## Fiber v3 conventions (differ from v2 examples online)
+## Fiber v3 conventions 
+
+**Fiber v3 only.** Import `github.com/gofiber/fiber/v3` (and `v3` middleware packages) — never `fiber/v2`, and don't copy v2 code or docs. If an API you need only exists in v2, find the v3 equivalent or ask.
 
 - **Handlers take `fiber.Ctx` by value, not `*fiber.Ctx`** — it's an interface. Same for `ErrorHandler` and helpers.
 - **Bind, don't parse:** `c.Bind().Body(out)` / `.Query(out)` / `.URI(out)` with `uri:"..."` tags. `QueryInt` & co. are gone — use `fiber.Query[T](c, key)`.
