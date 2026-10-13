@@ -16,3 +16,11 @@ MY_NOTE.txt
 build/api
 tmp/
 devtools/db/postgres_data/
+
+# not needed to build cmd/api
+.ai/
+.claude/
+.air.toml
+.env.*
+devtools/
+examples/
